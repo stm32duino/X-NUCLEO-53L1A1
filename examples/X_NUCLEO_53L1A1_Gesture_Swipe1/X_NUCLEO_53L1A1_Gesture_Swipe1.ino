@@ -1,0 +1,240 @@
+/**
+ ******************************************************************************
+ * @file    X_NUCLEO_53L1A1_Gesture_Swipe1.ino
+ * @author  AST
+ * @version V1.0.0
+ * @date    14 December 2018
+ * @brief   Arduino test application for the STMicrolectronics X-NUCLEO-53L1A1
+ *          proximity sensor expansion board based on FlightSense.
+ *          This application makes use of C++ classes obtained from the C
+ *          components' drivers.
+ ******************************************************************************
+ * @attention
+ *
+ * <h2><center>&copy; COPYRIGHT(c) 2018 STMicroelectronics</center></h2>
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *   1. Redistributions of source code must retain the above copyright notice,
+ *      this list of conditions and the following disclaimer.
+ *   2. Redistributions in binary form must reproduce the above copyright notice,
+ *      this list of conditions and the following disclaimer in the documentation
+ *      and/or other materials provided with the distribution.
+ *   3. Neither the name of STMicroelectronics nor the names of its contributors
+ *      may be used to endorse or promote products derived from this software
+ *      without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ ******************************************************************************
+ */
+
+/* Includes ------------------------------------------------------------------*/
+#include <Arduino.h>
+#include <Wire.h>
+#include <vl53l1x_x_nucleo_53l1a1_class.h>
+#include <stmpe1600_class.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdint.h>
+#include <assert.h>
+#include <tof_gestures.h>
+#include <tof_gestures_SWIPE_1.h>
+
+#define DEV_I2C Wire
+#define SerialPort Serial
+
+//#define DEBUG_MODE
+
+#define DEV_I2C Wire
+#define SerialPort Serial
+
+//For AVR compatibility where D8 and D2 are undefined
+#ifndef D8
+  #define D8 8
+#endif
+
+
+#ifndef D2
+  #define D2 2
+#endif
+
+
+// Components.
+STMPE1600DigiOut *xshutdown_top;
+STMPE1600DigiOut *xshutdown_left;
+STMPE1600DigiOut *xshutdown_right;
+VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
+VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
+VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
+
+// Gesture structure.
+Gesture_SWIPE_1_Data_t gestureSwipeData;
+
+// Range value
+uint16_t distance_top;
+
+
+
+void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
+  int status;
+
+  //First set high timing value in order to change distance mode
+  status = sensor->VL53L1X_SetTimingBudgetInMs(100);
+  if( status ){
+    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 1 failed");
+  }
+
+  //Change distance mode to short range
+  status = sensor->VL53L1X_SetDistanceMode(1);
+  if( status ){
+    SerialPort.println("SetDistanceMode failed");
+  }
+
+  //Change timing budget again to 20 ms
+  status = sensor->VL53L1X_SetTimingBudgetInMs(20);
+  if( status ){
+    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 2 failed");
+  }
+  status = sensor->VL53L1X_SetInterMeasurementInMs(20);
+  if( status ){
+    SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
+  }
+  
+}
+
+
+/* Setup ---------------------------------------------------------------------*/
+
+void setup() {
+  int status;
+  // Led.
+  pinMode(13, OUTPUT);
+
+  // Initialize serial for output.
+  SerialPort.begin(115200);
+
+  // Initialize I2C bus.
+  DEV_I2C.begin();
+
+  // Create VL53L1 top component.
+  xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
+  sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
+  
+  // Switch off VL53L1 top component.
+  sensor_vl53l1_top->VL53L1_Off();
+  
+  // Create (if present) VL53L1 left component.
+  xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
+  sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
+  
+  // Switch off (if present) VL53L1 left component.
+  sensor_vl53l1_left->VL53L1_Off();
+  
+  // Create (if present) VL53L1 right component.
+  xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
+  sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
+  
+  // Switch off (if present) VL53L1 right component.
+  sensor_vl53l1_right->VL53L1_Off();
+  
+  // Initialize VL531X top component.
+  status = sensor_vl53l1_top->InitSensor(0x10);
+  if(status)
+  {
+    SerialPort.println("Init sensor_vl53l1x_top failed...");
+  }
+  
+  // Initialize VL53L1X gesture library.
+  tof_gestures_initSWIPE_1(&gestureSwipeData);
+
+  //Change Distance mode and timings
+  SetupSingleShot(sensor_vl53l1_top);
+}
+
+
+/* Loop ----------------------------------------------------------------------*/
+
+void loop() {
+  int gesture_code;
+  int status;
+  
+  sensor_vl53l1_top->VL53L1X_StartRanging();
+  
+  int top_done = 0;
+  uint8_t NewDataReady=0;
+  uint8_t RangeStatus;
+  do
+  {
+    //if top not done
+    if(top_done == 0)
+    {
+      NewDataReady = 0;
+      //check measurement data ready
+      int status = sensor_vl53l1_top->VL53L1X_CheckForDataReady(&NewDataReady);
+
+      if( status ){
+        SerialPort.println("GetMeasurementDataReady top sensor failed");
+      }
+      //if ready
+      if(NewDataReady)
+      {
+        //get status
+        status = sensor_vl53l1_top->VL53L1X_GetRangeStatus(&RangeStatus);
+        if( status ){
+          SerialPort.println("GetRangeStatus top sensor failed");
+        }
+
+        //if distance < 1.3 m
+        if (RangeStatus == 0) {
+          // we have a valid range.
+          status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance_top);
+          distance_top = (distance_top==0) ? 1400 : distance_top;
+          if( status ){
+            SerialPort.println("GetDistance top sensor failed");
+          }
+        }else {
+          distance_top = 1400;   //default distance
+        }
+
+        //restart measurement
+        status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
+        if( status ){
+          SerialPort.println("Restart top sensor failed");
+        }
+        
+        top_done = 1 ;
+      }
+    }
+  }while(top_done == 0);
+
+
+  #ifdef DEBUG_MODE
+  Serial.println("Distance top: " + String(distance_top));
+  #endif
+    
+  
+  // Launch gesture detection algorithm.
+  gesture_code = tof_gestures_detectSWIPE_1(distance_top, &gestureSwipeData);
+
+  // Check the result of the gesture detection algorithm.
+  switch(gesture_code)
+  {
+    case GESTURES_SINGLE_SWIPE:
+      SerialPort.println("GESTURES_SINGLE_SWIPE DETECTED!!!");
+      break;
+    default:
+      // Do nothing
+      break;
+  }
+}
