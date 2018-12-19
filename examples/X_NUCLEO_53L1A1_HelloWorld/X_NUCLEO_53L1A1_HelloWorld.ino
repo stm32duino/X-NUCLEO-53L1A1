@@ -193,7 +193,4 @@ void loop() {
   sensor_vl53l1_top->VL53L1X_StopRanging();
   sensor_vl53l1_left->VL53L1X_StopRanging();
   sensor_vl53l1_right->VL53L1X_StopRanging();
-
-  
-
 }

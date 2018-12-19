@@ -89,28 +89,21 @@ uint16_t distance_top;
 void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
   int status;
 
-  //First set high timing value in order to change distance mode
-  status = sensor->VL53L1X_SetTimingBudgetInMs(100);
-  if( status ){
-    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 1 failed");
-  }
-
   //Change distance mode to short range
   status = sensor->VL53L1X_SetDistanceMode(1);
   if( status ){
     SerialPort.println("SetDistanceMode failed");
   }
 
-  //Change timing budget again to 20 ms
-  status = sensor->VL53L1X_SetTimingBudgetInMs(20);
+  //Change timing budget again to 15 ms
+  status = sensor->VL53L1X_SetTimingBudgetInMs(15);
   if( status ){
     SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 2 failed");
   }
-  status = sensor->VL53L1X_SetInterMeasurementInMs(20);
+  status = sensor->VL53L1X_SetInterMeasurementInMs(15);
   if( status ){
     SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
   }
-  
 }
 
 
