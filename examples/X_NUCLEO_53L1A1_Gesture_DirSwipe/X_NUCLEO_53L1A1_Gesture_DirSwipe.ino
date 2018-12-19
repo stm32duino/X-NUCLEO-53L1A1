@@ -79,15 +79,8 @@ Gesture_DIRSWIPE_1_Data_t gestureDirSwipeData;
 // Range values
 uint16_t distance_left, distance_right;
 
-
 void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
   int status;
-
-  //First set high timing value in order to change distance mode
-  status = sensor->VL53L1X_SetTimingBudgetInMs(100);
-  if( status ){
-    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 1 failed");
-  }
 
   //Change distance mode to short range
   status = sensor->VL53L1X_SetDistanceMode(1);
@@ -103,8 +96,7 @@ void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
   status = sensor->VL53L1X_SetInterMeasurementInMs(15);
   if( status ){
     SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
-  }
-  
+  } 
 }
 
 
@@ -155,8 +147,7 @@ void setup() {
   {
     SerialPort.println("Init sensor_vl53l1_right failed...");
   }
-  
-  
+ 
   // Initialize VL53L1X gesture library.
   tof_gestures_initDIRSWIPE_1(400, 0, 500, &gestureDirSwipeData);
 
@@ -167,7 +158,6 @@ void setup() {
   //Start measurement
   sensor_vl53l1_left->VL53L1X_StartRanging();
   sensor_vl53l1_right->VL53L1X_StartRanging();
-  
 }
 
 
@@ -264,12 +254,10 @@ void loop() {
     }
   }while(left_done == 0 || right_done == 0);
 
-
 #ifdef DEBUG_MODE
   Serial.println("Distance left: " + String(distance_left) + " Distance right: " + String(distance_right));
 #endif
-    
-  
+
   // Launch gesture detection algorithm.
   gesture_code = tof_gestures_detectDIRSWIPE_1(distance_left, distance_right, &gestureDirSwipeData);
 
@@ -286,5 +274,4 @@ void loop() {
       // Do nothing
       break;
   }
-
 }
