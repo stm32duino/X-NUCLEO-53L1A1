@@ -58,11 +58,9 @@
   #define D8 8
 #endif
 
-
 #ifndef D2
   #define D2 2
 #endif
-
 
 // Components.
 STMPE1600DigiOut *xshutdown_top;
@@ -71,7 +69,6 @@ STMPE1600DigiOut *xshutdown_right;
 VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
 VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
 VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
-
 
 /* Setup ---------------------------------------------------------------------*/
 
@@ -86,7 +83,6 @@ void setup() {
 
   // Initialize I2C bus.
   DEV_I2C.begin();
-
 
   // Create VL53L1X top component.
   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
@@ -113,7 +109,6 @@ void setup() {
   sensor_vl53l1_top->InitSensor(0x10);
   sensor_vl53l1_left->InitSensor(0x12);
   sensor_vl53l1_right->InitSensor(0x14);
-
 }
 
 void loop() {

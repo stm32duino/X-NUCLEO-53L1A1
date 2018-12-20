@@ -58,20 +58,16 @@
 #define DEV_I2C Wire
 #define SerialPort Serial
 
-
 //For AVR compatibility where D8 and D2 are undefined
 #ifndef D8
   #define D8 8
 #endif
 
-
 #ifndef D2
   #define D2 2
 #endif
 
-
 #define interruptPin A2
-
 
 // Components.
 STMPE1600DigiOut *xshutdown_top;
@@ -83,11 +79,9 @@ VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
 
 volatile int interruptCount=0;
 
-
 void measure() {
   interruptCount=1;
 }
-
 
 void setup() {
   VL53L1_Error status;
@@ -96,14 +90,12 @@ void setup() {
   pinMode(interruptPin, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(interruptPin), measure, HIGH);
 
-
   // Initialize serial for output.
   SerialPort.begin(115200);
   SerialPort.println("Starting...");
 
   // Initialize I2C bus.
   DEV_I2C.begin();
-
 
   // Create VL53L1X top component.
   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
@@ -145,27 +137,29 @@ void setup() {
 
   //Start measurement
   sensor_vl53l1_top->VL53L1X_StartRanging();
-  
 }
 
 void loop() {
-  if (interruptCount){
+  if (interruptCount) {
+    uint16_t distance;
+    int status;
+
     interruptCount=0;
     // Led blinking.
     digitalWrite(13, HIGH);
-    uint16_t distance;
-    int status;
+
     //read distance
     status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance);
-    if( status ){
+    if( status ) {
         SerialPort.println("GetDistance top sensor failed");
-      }
+    }
 
     //restart sensor
     status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
-    if( status ){
+    if( status ) {
        SerialPort.println("Restart top sensor failed");
-      }
+    }
+
     // Output data.
     char report[64];
     snprintf(report, sizeof(report), "| Distance top [mm]: %ld |", distance);

@@ -61,12 +61,9 @@
   #define D8 8
 #endif
 
-
 #ifndef D2
   #define D2 2
 #endif
-
-
 
 // Components.
 STMPE1600DigiOut *xshutdown_top;
@@ -82,8 +79,7 @@ Gesture_TAP_1_Data_t gestureTapData;
 // Range value
 uint16_t distance_top;
 
-
-void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
+void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor) {
   int status;
 
   //Change distance mode to short range
@@ -95,7 +91,7 @@ void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
   //Change timing budget again to 15 ms
   status = sensor->VL53L1X_SetTimingBudgetInMs(15);
   if( status ){
-    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 2 failed");
+    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds failed");
   }
   status = sensor->VL53L1X_SetInterMeasurementInMs(15);
   if( status ){
