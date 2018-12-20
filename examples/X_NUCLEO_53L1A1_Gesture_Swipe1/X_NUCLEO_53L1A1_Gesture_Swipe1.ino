@@ -64,11 +64,9 @@
   #define D8 8
 #endif
 
-
 #ifndef D2
   #define D2 2
 #endif
-
 
 // Components.
 STMPE1600DigiOut *xshutdown_top;
@@ -84,9 +82,7 @@ Gesture_SWIPE_1_Data_t gestureSwipeData;
 // Range value
 uint16_t distance_top;
 
-
-
-void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
+void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor) {
   int status;
 
   //Change distance mode to short range
@@ -98,7 +94,7 @@ void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
   //Change timing budget again to 15 ms
   status = sensor->VL53L1X_SetTimingBudgetInMs(15);
   if( status ){
-    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds 2 failed");
+    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds failed");
   }
   status = sensor->VL53L1X_SetInterMeasurementInMs(15);
   if( status ){
@@ -211,12 +207,10 @@ void loop() {
     }
   }while(top_done == 0);
 
-
   #ifdef DEBUG_MODE
   Serial.println("Distance top: " + String(distance_top));
   #endif
-    
-  
+
   // Launch gesture detection algorithm.
   gesture_code = tof_gestures_detectSWIPE_1(distance_top, &gestureSwipeData);
 
