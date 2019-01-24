@@ -39,7 +39,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include <Wire.h>
 
-#define STMPE1600_DEF_DEVICE_ADDRESS  (uint8_t)0x42*2   
+#define STMPE1600_DEF_DEVICE_ADDRESS  (uint8_t)0x42*2
 #define STMPE1600_DEF_DIGIOUT_LVL      1
 
 /**  STMPE1600 registr map **/
@@ -62,109 +62,112 @@
 
 #define SOFT_RESET      (uint8_t)0x80
 
-typedef enum {
-  // GPIO Expander pin names
-  GPIO_0=0,
-  GPIO_1,
-  GPIO_2,
-  GPIO_3,            
-  GPIO_4,
-  GPIO_5,
-  GPIO_6,
-  GPIO_7,            
-  GPIO_8,
-  GPIO_9,
-  GPIO_10,
-  GPIO_11,            
-  GPIO_12,
-  GPIO_13,
-  GPIO_14,
-  GPIO_15,
-  NOT_CON
-} ExpGpioPinName;   
+typedef enum
+{
+   // GPIO Expander pin names
+   GPIO_0=0,
+   GPIO_1,
+   GPIO_2,
+   GPIO_3,
+   GPIO_4,
+   GPIO_5,
+   GPIO_6,
+   GPIO_7,
+   GPIO_8,
+   GPIO_9,
+   GPIO_10,
+   GPIO_11,
+   GPIO_12,
+   GPIO_13,
+   GPIO_14,
+   GPIO_15,
+   NOT_CON
+} ExpGpioPinName;
 
-typedef enum {
-    EXP_GPIO_INPUT = 0,
-    EXP_GPIO_OUTPUT,
-    EXP_GPIO_NOT_CONNECTED
+typedef enum
+{
+   EXP_GPIO_INPUT = 0,
+   EXP_GPIO_OUTPUT,
+   EXP_GPIO_NOT_CONNECTED
 } ExpGpioPinDirection;
 
 /* Classes -------------------------------------------------------------------*/
 /** Class representing a single stmpe1600 GPIO expander output pin
  */
-class STMPE1600DigiOut {
-	
- public: 
-    /** Constructor
-     * @param[in] &i2c device I2C to be used for communication
-     * @param[in] outpinname the desired out pin name to be created
-     * @param[in] DevAddr the stmpe1600 I2C device addres (deft STMPE1600_DEF_DEVICE_ADDRESS)
-     * @param[in] lvl the default ot pin level  
-     */ 
-    STMPE1600DigiOut (TwoWire *i2c, ExpGpioPinName outpinname, uint8_t DevAddr=STMPE1600_DEF_DEVICE_ADDRESS, bool lvl=STMPE1600_DEF_DIGIOUT_LVL): dev_i2c(i2c), expdevaddr(DevAddr), exppinname(outpinname) 
-    {
-       uint8_t data[2];				
-       if (exppinname == NOT_CON) return;
-       /* set the exppinname as output */
-       STMPE1600DigiOut_I2CRead(data, expdevaddr, GPDR_0_7, 1);
-       STMPE1600DigiOut_I2CRead(&data[1], expdevaddr, GPDR_8_15, 1);			
-       *(uint16_t*)data = *(uint16_t*)data | (1<<(uint16_t)exppinname);  // set gpio as out 			
-       STMPE1600DigiOut_I2CWrite(data, expdevaddr, GPDR_0_7, 1);
-       STMPE1600DigiOut_I2CWrite(&data[1], expdevaddr, GPDR_8_15, 1);			
-       write(lvl);
-    }   
+class STMPE1600DigiOut
+{
 
-	/**
-	 * @brief       Write on the out pin
-	 * @param[in]   lvl level to write
-	 * @return      0 on Success
-	 */			
-    void write (int lvl) 
-    {
-       uint8_t data[2];			
-       if (exppinname == NOT_CON) return;			
-       /* set the exppinname state to lvl */
-       STMPE1600DigiOut_I2CRead(data, expdevaddr, GPSR_0_7, 2);
-       *(uint16_t*)data = *(uint16_t*)data & (uint16_t)(~(1<<(uint16_t)exppinname));  // set pin mask 			
-       if (lvl) *(uint16_t*)data = *(uint16_t*)data | (uint16_t)(1<<(uint16_t)exppinname);
-       STMPE1600DigiOut_I2CWrite(data, expdevaddr, GPSR_0_7, 2);
-    }
-		
- private:
-    TwoWire *dev_i2c; 
-    uint8_t expdevaddr;
-    ExpGpioPinName exppinname;
+public:
+   /** Constructor
+    * @param[in] &i2c device I2C to be used for communication
+    * @param[in] outpinname the desired out pin name to be created
+    * @param[in] DevAddr the stmpe1600 I2C device addres (deft STMPE1600_DEF_DEVICE_ADDRESS)
+    * @param[in] lvl the default ot pin level
+    */
+   STMPE1600DigiOut (TwoWire *i2c, ExpGpioPinName outpinname, uint8_t DevAddr=STMPE1600_DEF_DEVICE_ADDRESS, bool lvl=STMPE1600_DEF_DIGIOUT_LVL): dev_i2c(i2c), expdevaddr(DevAddr), exppinname(outpinname)
+   {
+      uint8_t data[2];
+      if (exppinname == NOT_CON) return;
+      /* set the exppinname as output */
+      STMPE1600DigiOut_I2CRead(data, expdevaddr, GPDR_0_7, 1);
+      STMPE1600DigiOut_I2CRead(&data[1], expdevaddr, GPDR_8_15, 1);
+      *(uint16_t*)data = *(uint16_t*)data | (1<<(uint16_t)exppinname);  // set gpio as out
+      STMPE1600DigiOut_I2CWrite(data, expdevaddr, GPDR_0_7, 1);
+      STMPE1600DigiOut_I2CWrite(&data[1], expdevaddr, GPDR_8_15, 1);
+      write(lvl);
+   }
 
-    int STMPE1600DigiOut_I2CWrite(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToWrite)
-    {
+   /**
+    * @brief       Write on the out pin
+    * @param[in]   lvl level to write
+    * @return      0 on Success
+    */
+   void write (int lvl)
+   {
+      uint8_t data[2];
+      if (exppinname == NOT_CON) return;
+      /* set the exppinname state to lvl */
+      STMPE1600DigiOut_I2CRead(data, expdevaddr, GPSR_0_7, 2);
+      *(uint16_t*)data = *(uint16_t*)data & (uint16_t)(~(1<<(uint16_t)exppinname));  // set pin mask
+      if (lvl) *(uint16_t*)data = *(uint16_t*)data | (uint16_t)(1<<(uint16_t)exppinname);
+      STMPE1600DigiOut_I2CWrite(data, expdevaddr, GPSR_0_7, 2);
+   }
+
+private:
+   TwoWire *dev_i2c;
+   uint8_t expdevaddr;
+   ExpGpioPinName exppinname;
+
+   int STMPE1600DigiOut_I2CWrite(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToWrite)
+   {
       dev_i2c->beginTransmission(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)));
-  
+
       dev_i2c->write(RegisterAddr);
       for (int i = 0 ; i < NumByteToWrite ; i++)
-        dev_i2c->write(pBuffer[i]);
-  
-      dev_i2c->endTransmission(true);
-  
-      return 0;
-    }
+         dev_i2c->write(pBuffer[i]);
 
-    int STMPE1600DigiOut_I2CRead(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead)
-    {
+      dev_i2c->endTransmission(true);
+
+      return 0;
+   }
+
+   int STMPE1600DigiOut_I2CRead(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead)
+   {
       dev_i2c->beginTransmission(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)));
       dev_i2c->write(RegisterAddr);
       dev_i2c->endTransmission(false);
-  
+
       dev_i2c->requestFrom(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)), (byte) NumByteToRead);
 
       int i=0;
       while (dev_i2c->available())
       {
-        pBuffer[i] = dev_i2c->read();
-        i++;
+         pBuffer[i] = dev_i2c->read();
+         i++;
       }
-  
+
       return 0;
-    }
+   }
 };
 
 #endif // __STMPE1600_CLASS

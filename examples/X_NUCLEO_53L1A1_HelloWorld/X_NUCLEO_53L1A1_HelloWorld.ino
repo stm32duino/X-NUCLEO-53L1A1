@@ -55,11 +55,11 @@
 
 //For AVR compatibility where D8 and D2 are undefined
 #ifndef D8
-  #define D8 8
+#define D8 8
 #endif
 
 #ifndef D2
-  #define D2 2
+#define D2 2
 #endif
 
 // Components.
@@ -72,120 +72,128 @@ VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
 
 /* Setup ---------------------------------------------------------------------*/
 
-void setup() {
-  VL53L1_Error status;
-  // Led.
-  pinMode(13, OUTPUT);
+void setup()
+{
+   VL53L1_Error status;
+   // Led.
+   pinMode(13, OUTPUT);
 
-  // Initialize serial for output.
-  SerialPort.begin(115200);
-  SerialPort.println("Starting...");
+   // Initialize serial for output.
+   SerialPort.begin(115200);
+   SerialPort.println("Starting...");
 
-  // Initialize I2C bus.
-  DEV_I2C.begin();
+   // Initialize I2C bus.
+   DEV_I2C.begin();
 
-  // Create VL53L1X top component.
-  xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-  sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
-  
-  // Switch off VL53L1X top component.
-  sensor_vl53l1_top->VL53L1_Off();
-  
-  // Create (if present) VL53L1X left component.
-  xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-  sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
-  
-  //Switch off (if present) VL53L1X left component.
-  sensor_vl53l1_left->VL53L1_Off();
-  
-  // Create (if present) VL53L1X right component.
-  xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-  sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
-  
-  // Switch off (if present) VL53L1X right component.
-  sensor_vl53l1_right->VL53L1_Off();
+   // Create VL53L1X top component.
+   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
+   sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
 
-  //Initialize all the sensors
-  sensor_vl53l1_top->InitSensor(0x10);
-  sensor_vl53l1_left->InitSensor(0x12);
-  sensor_vl53l1_right->InitSensor(0x14);
+   // Switch off VL53L1X top component.
+   sensor_vl53l1_top->VL53L1_Off();
+
+   // Create (if present) VL53L1X left component.
+   xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
+   sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
+
+   //Switch off (if present) VL53L1X left component.
+   sensor_vl53l1_left->VL53L1_Off();
+
+   // Create (if present) VL53L1X right component.
+   xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
+   sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
+
+   // Switch off (if present) VL53L1X right component.
+   sensor_vl53l1_right->VL53L1_Off();
+
+   //Initialize all the sensors
+   sensor_vl53l1_top->InitSensor(0x10);
+   sensor_vl53l1_left->InitSensor(0x12);
+   sensor_vl53l1_right->InitSensor(0x14);
 }
 
-void loop() {
-  int status;
-  uint8_t ready = 0;
-  uint16_t distance;
+void loop()
+{
+   int status;
+   uint8_t ready = 0;
+   uint16_t distance;
 
-  //Led off
-  digitalWrite(13, LOW);
+   //Led off
+   digitalWrite(13, LOW);
 
-  //Start measurament
-  sensor_vl53l1_top->VL53L1X_StartRanging();
-  sensor_vl53l1_left->VL53L1X_StartRanging();
-  sensor_vl53l1_right->VL53L1X_StartRanging();
+   //Start measurament
+   sensor_vl53l1_top->VL53L1X_StartRanging();
+   sensor_vl53l1_left->VL53L1X_StartRanging();
+   sensor_vl53l1_right->VL53L1X_StartRanging();
 
-  //Poll for measurament completion top sensor
-  do {
-    sensor_vl53l1_top->VL53L1X_CheckForDataReady(&ready);
-  } while (!ready);
+   //Poll for measurament completion top sensor
+   do
+   {
+      sensor_vl53l1_top->VL53L1X_CheckForDataReady(&ready);
+   }
+   while (!ready);
 
-  //Led on
-  digitalWrite(13, HIGH);
+   //Led on
+   digitalWrite(13, HIGH);
 
-  //Get distance top
-  status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance);
+   //Get distance top
+   status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance);
 
-  if (status == VL53L1_ERROR_NONE)
-  {
-    // Output data.
-    char report[64];
-    snprintf(report, sizeof(report), "| Distance top [mm]: %d |", distance);
-    SerialPort.println(report);
-  }
+   if (status == VL53L1_ERROR_NONE)
+   {
+      // Output data.
+      char report[64];
+      snprintf(report, sizeof(report), "| Distance top [mm]: %d |", distance);
+      SerialPort.println(report);
+   }
 
-  //Clear interrupt
-  status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
+   //Clear interrupt
+   status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
 
-  //Poll for measurament completion left sensor
-  do {
-    sensor_vl53l1_left->VL53L1X_CheckForDataReady(&ready);
-  } while (!ready);
+   //Poll for measurament completion left sensor
+   do
+   {
+      sensor_vl53l1_left->VL53L1X_CheckForDataReady(&ready);
+   }
+   while (!ready);
 
-  //Get distance left
-  status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance);
+   //Get distance left
+   status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance);
 
-  if (status == VL53L1_ERROR_NONE)
-  {
-    // Output data.
-    char report[64];
-    snprintf(report, sizeof(report), "| Distance left [mm]: %d |", distance);
-    SerialPort.println(report);
-  }
+   if (status == VL53L1_ERROR_NONE)
+   {
+      // Output data.
+      char report[64];
+      snprintf(report, sizeof(report), "| Distance left [mm]: %d |", distance);
+      SerialPort.println(report);
+   }
 
-  //Clear interrupt
-  status = sensor_vl53l1_left->VL53L1X_ClearInterrupt();
+   //Clear interrupt
+   status = sensor_vl53l1_left->VL53L1X_ClearInterrupt();
 
-  //Poll for measurament completion right sensor
-  do {
-    sensor_vl53l1_right->VL53L1X_CheckForDataReady(&ready);
-  } while (!ready);
+   //Poll for measurament completion right sensor
+   do
+   {
+      sensor_vl53l1_right->VL53L1X_CheckForDataReady(&ready);
+   }
+   while (!ready);
 
-  //Get distance right
-  status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance);
+   //Get distance right
+   status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance);
 
-  if (status == VL53L1_ERROR_NONE)
-  {
-    // Output data.
-    char report[64];
-    snprintf(report, sizeof(report), "| Distance right [mm]: %d |", distance);
-    SerialPort.println(report);
-  }
+   if (status == VL53L1_ERROR_NONE)
+   {
+      // Output data.
+      char report[64];
+      snprintf(report, sizeof(report), "| Distance right [mm]: %d |", distance);
+      SerialPort.println(report);
+   }
 
-  //Clear interrupt
-  status = sensor_vl53l1_right->VL53L1X_ClearInterrupt();
+   //Clear interrupt
+   status = sensor_vl53l1_right->VL53L1X_ClearInterrupt();
 
-  //Stop measurament on all sensors
-  sensor_vl53l1_top->VL53L1X_StopRanging();
-  sensor_vl53l1_left->VL53L1X_StopRanging();
-  sensor_vl53l1_right->VL53L1X_StopRanging();
+   //Stop measurament on all sensors
+   sensor_vl53l1_top->VL53L1X_StopRanging();
+   sensor_vl53l1_left->VL53L1X_StopRanging();
+   sensor_vl53l1_right->VL53L1X_StopRanging();
 }

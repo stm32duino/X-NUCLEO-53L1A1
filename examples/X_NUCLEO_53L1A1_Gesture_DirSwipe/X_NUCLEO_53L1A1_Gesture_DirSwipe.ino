@@ -56,12 +56,12 @@
 
 //For AVR compatibility where D8 and D2 are undefined
 #ifndef D8
-  #define D8 8
+#define D8 8
 #endif
 
 
 #ifndef D2
-  #define D2 2
+#define D2 2
 #endif
 
 
@@ -79,199 +79,220 @@ Gesture_DIRSWIPE_1_Data_t gestureDirSwipeData;
 // Range values
 uint16_t distance_left, distance_right;
 
-void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor){
-  int status;
+void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor)
+{
+   int status;
 
-  //Change distance mode to short range
-  status = sensor->VL53L1X_SetDistanceMode(1);
-  if( status ){
-    SerialPort.println("SetDistanceMode failed");
-  }
+   //Change distance mode to short range
+   status = sensor->VL53L1X_SetDistanceMode(1);
+   if( status )
+   {
+      SerialPort.println("SetDistanceMode failed");
+   }
 
-  //Change timing budget again to 15 ms
-  status = sensor->VL53L1X_SetTimingBudgetInMs(15);
-  if( status ){
-    SerialPort.println("SetMeasurementTimingBudgetMicroSeconds failed");
-  }
-  status = sensor->VL53L1X_SetInterMeasurementInMs(15);
-  if( status ){
-    SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
-  } 
+   //Change timing budget again to 15 ms
+   status = sensor->VL53L1X_SetTimingBudgetInMs(15);
+   if( status )
+   {
+      SerialPort.println("SetMeasurementTimingBudgetMicroSeconds failed");
+   }
+   status = sensor->VL53L1X_SetInterMeasurementInMs(15);
+   if( status )
+   {
+      SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
+   }
 }
 
 
 /* Setup ---------------------------------------------------------------------*/
 
-void setup() {
-  int status;
-  // Led.
-  pinMode(13, OUTPUT);
+void setup()
+{
+   int status;
+   // Led.
+   pinMode(13, OUTPUT);
 
-  // Initialize serial for output.
-  SerialPort.begin(115200);
+   // Initialize serial for output.
+   SerialPort.begin(115200);
 
-  // Initialize I2C bus.
-  DEV_I2C.begin();
+   // Initialize I2C bus.
+   DEV_I2C.begin();
 
-  // Create VL53L1X top component.
-  xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-  sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
-  
-  // Switch off VL53L1X top component.
-  sensor_vl53l1_top->VL53L1_Off();
-  
-  // Create (if present) VL53L1X left component.
-  xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-  sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, 8);
-  
-  // Switch off (if present) VL53L1X left component.
-  sensor_vl53l1_left->VL53L1_Off();
-  
-  // Create (if present) VL53L1X right component.
-  xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-  sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, 2);
-  
-  // Switch off (if present) VL53L1X right component.
-  sensor_vl53l1_right->VL53L1_Off();
-  
-  // Initialize VL53L1X left component.
-  status = sensor_vl53l1_left->InitSensor(0x12);
-  if(status)
-  {
-    SerialPort.println("Init sensor_vl53l1_left failed...");
-  }
+   // Create VL53L1X top component.
+   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
+   sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
 
-  // Initialize VL53L1X right component.
-  status = sensor_vl53l1_right->InitSensor(0x14);
-  if(status)
-  {
-    SerialPort.println("Init sensor_vl53l1_right failed...");
-  }
- 
-  // Initialize VL53L1X gesture library.
-  tof_gestures_initDIRSWIPE_1(400, 0, 500, &gestureDirSwipeData);
+   // Switch off VL53L1X top component.
+   sensor_vl53l1_top->VL53L1_Off();
 
-  //Change Distance mode and timings
-  SetupSingleShot(sensor_vl53l1_left);
-  SetupSingleShot(sensor_vl53l1_right);
+   // Create (if present) VL53L1X left component.
+   xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
+   sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, 8);
 
-  //Start measurement
-  sensor_vl53l1_left->VL53L1X_StartRanging();
-  sensor_vl53l1_right->VL53L1X_StartRanging();
+   // Switch off (if present) VL53L1X left component.
+   sensor_vl53l1_left->VL53L1_Off();
+
+   // Create (if present) VL53L1X right component.
+   xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
+   sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, 2);
+
+   // Switch off (if present) VL53L1X right component.
+   sensor_vl53l1_right->VL53L1_Off();
+
+   // Initialize VL53L1X left component.
+   status = sensor_vl53l1_left->InitSensor(0x12);
+   if(status)
+   {
+      SerialPort.println("Init sensor_vl53l1_left failed...");
+   }
+
+   // Initialize VL53L1X right component.
+   status = sensor_vl53l1_right->InitSensor(0x14);
+   if(status)
+   {
+      SerialPort.println("Init sensor_vl53l1_right failed...");
+   }
+
+   // Initialize VL53L1X gesture library.
+   tof_gestures_initDIRSWIPE_1(400, 0, 500, &gestureDirSwipeData);
+
+   //Change Distance mode and timings
+   SetupSingleShot(sensor_vl53l1_left);
+   SetupSingleShot(sensor_vl53l1_right);
+
+   //Start measurement
+   sensor_vl53l1_left->VL53L1X_StartRanging();
+   sensor_vl53l1_right->VL53L1X_StartRanging();
 }
 
 
 /* Loop ----------------------------------------------------------------------*/
 
-void loop() {
-  int gesture_code;
-  int status; 
-  int left_done = 0;
-  int right_done = 0;
-  uint8_t NewDataReady=0;
-  uint8_t RangeStatus;
+void loop()
+{
+   int gesture_code;
+   int status;
+   int left_done = 0;
+   int right_done = 0;
+   uint8_t NewDataReady=0;
+   uint8_t RangeStatus;
 
-  //wait for data ready
-  do
-  {
-    //if left not done
-    if(left_done == 0)
-    {
-      NewDataReady = 0;
-      //check measurement data ready
-      int status = sensor_vl53l1_left->VL53L1X_CheckForDataReady(&NewDataReady);
-
-      if( status ){
-        SerialPort.println("GetMeasurementDataReady left sensor failed");
-      }
-      //if ready
-      if(NewDataReady)
+   //wait for data ready
+   do
+   {
+      //if left not done
+      if(left_done == 0)
       {
-        //get status
-        status = sensor_vl53l1_left->VL53L1X_GetRangeStatus(&RangeStatus);
-        if( status ){
-          SerialPort.println("GetRangeStatus left sensor failed");
-        }
+         NewDataReady = 0;
+         //check measurement data ready
+         int status = sensor_vl53l1_left->VL53L1X_CheckForDataReady(&NewDataReady);
 
-        //if distance < 1.3 m
-        if (RangeStatus != 4) {
-          // we have a valid range.
-          status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance_left);
-          if( status ){
-            SerialPort.println("GetDistance left sensor failed");
-          }
-        }else {
-          distance_left = 1400;   //default distance
-        }
+         if( status )
+         {
+            SerialPort.println("GetMeasurementDataReady left sensor failed");
+         }
+         //if ready
+         if(NewDataReady)
+         {
+            //get status
+            status = sensor_vl53l1_left->VL53L1X_GetRangeStatus(&RangeStatus);
+            if( status )
+            {
+               SerialPort.println("GetRangeStatus left sensor failed");
+            }
 
-        //restart measurement
-        status = sensor_vl53l1_left->VL53L1X_ClearInterrupt();
-        if( status ){
-          SerialPort.println("Restart left sensor failed");
-        }
-        
-        left_done = 1 ;
+            //if distance < 1.3 m
+            if (RangeStatus != 4)
+            {
+               // we have a valid range.
+               status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance_left);
+               if( status )
+               {
+                  SerialPort.println("GetDistance left sensor failed");
+               }
+            }
+            else
+            {
+               distance_left = 1400;   //default distance
+            }
+
+            //restart measurement
+            status = sensor_vl53l1_left->VL53L1X_ClearInterrupt();
+            if( status )
+            {
+               SerialPort.println("Restart left sensor failed");
+            }
+
+            left_done = 1 ;
+         }
       }
-    }
 
-    //if right not done
-    if(right_done == 0)
-    {
-      NewDataReady = 0;
-      //check measurement data ready
-      int status = sensor_vl53l1_right->VL53L1X_CheckForDataReady(&NewDataReady);
-
-      if( status ){
-        SerialPort.println("GetMeasurementDataReady right sensor failed");
-      }
-      //if ready
-      if(NewDataReady)
+      //if right not done
+      if(right_done == 0)
       {
-        //get status
-        status = sensor_vl53l1_right->VL53L1X_GetRangeStatus(&RangeStatus);
-        if( status ){
-          SerialPort.println("GetRangeStatus right sensor failed");
-        }
-        //if distance < 1.3 m
-        if (RangeStatus != 4) {
-          // we have a valid range.
-          status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance_right);
-          if( status ){
-            SerialPort.println("GetDistance right sensor failed");
-          }
-        }else {
-          distance_right = 1400;   //default distance
-        }
+         NewDataReady = 0;
+         //check measurement data ready
+         int status = sensor_vl53l1_right->VL53L1X_CheckForDataReady(&NewDataReady);
 
-        //restart measurement
-        status = sensor_vl53l1_right->VL53L1X_ClearInterrupt();
-        if( status ){
-          SerialPort.println("Restart right sensor failed");
-        }
-        
-        right_done = 1 ;
+         if( status )
+         {
+            SerialPort.println("GetMeasurementDataReady right sensor failed");
+         }
+         //if ready
+         if(NewDataReady)
+         {
+            //get status
+            status = sensor_vl53l1_right->VL53L1X_GetRangeStatus(&RangeStatus);
+            if( status )
+            {
+               SerialPort.println("GetRangeStatus right sensor failed");
+            }
+            //if distance < 1.3 m
+            if (RangeStatus != 4)
+            {
+               // we have a valid range.
+               status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance_right);
+               if( status )
+               {
+                  SerialPort.println("GetDistance right sensor failed");
+               }
+            }
+            else
+            {
+               distance_right = 1400;   //default distance
+            }
+
+            //restart measurement
+            status = sensor_vl53l1_right->VL53L1X_ClearInterrupt();
+            if( status )
+            {
+               SerialPort.println("Restart right sensor failed");
+            }
+
+            right_done = 1 ;
+         }
       }
-    }
-  }while(left_done == 0 || right_done == 0);
+   }
+   while(left_done == 0 || right_done == 0);
 
 #ifdef DEBUG_MODE
-  Serial.println("Distance left: " + String(distance_left) + " Distance right: " + String(distance_right));
+   Serial.println("Distance left: " + String(distance_left) + " Distance right: " + String(distance_right));
 #endif
 
-  // Launch gesture detection algorithm.
-  gesture_code = tof_gestures_detectDIRSWIPE_1(distance_left, distance_right, &gestureDirSwipeData);
+   // Launch gesture detection algorithm.
+   gesture_code = tof_gestures_detectDIRSWIPE_1(distance_left, distance_right, &gestureDirSwipeData);
 
-  // Check the result of the gesture detection algorithm.
-  switch(gesture_code)
-  {
-    case GESTURES_SWIPE_LEFT_RIGHT:
+   // Check the result of the gesture detection algorithm.
+   switch(gesture_code)
+   {
+   case GESTURES_SWIPE_LEFT_RIGHT:
       SerialPort.println("From LEFT to RIGHT --->");
       break;
-    case GESTURES_SWIPE_RIGHT_LEFT:
+   case GESTURES_SWIPE_RIGHT_LEFT:
       SerialPort.println("From RIGHT to LEFT <---");
       break;
-    default:
+   default:
       // Do nothing
       break;
-  }
+   }
 }
