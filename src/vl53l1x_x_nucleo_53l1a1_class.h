@@ -50,51 +50,51 @@
  */
 class VL53L1_X_NUCLEO_53L1A1 : public VL53L1X
 {
- public:
-    /** Constructor (STMPE1600DigiOut)
-     * @param[in] i2c device I2C to be used for communication
-     * @param[in] &pin Gpio Expander STMPE1600DigiOut pin to be used as component GPIO_0 CE
-     * @param[in] pin_gpio1 pin Mbed InterruptIn PinName to be used as component GPIO_1 INT
-     * @param[in] device address, 0x29 by default  
-     */		
-    VL53L1_X_NUCLEO_53L1A1(TwoWire *i2c, STMPE1600DigiOut *pin, int pin_gpio1) : VL53L1X(i2c, -1, pin_gpio1)
-    {
-       expgpio0 = pin;
-    }  	 
-    
+public:
+   /** Constructor (STMPE1600DigiOut)
+    * @param[in] i2c device I2C to be used for communication
+    * @param[in] &pin Gpio Expander STMPE1600DigiOut pin to be used as component GPIO_0 CE
+    * @param[in] pin_gpio1 pin Mbed InterruptIn PinName to be used as component GPIO_1 INT
+    * @param[in] device address, 0x29 by default
+    */
+   VL53L1_X_NUCLEO_53L1A1(TwoWire *i2c, STMPE1600DigiOut *pin, int pin_gpio1) : VL53L1X(i2c, -1, pin_gpio1)
+   {
+      expgpio0 = pin;
+   }
+
    /** Destructor
     */
-    virtual ~VL53L1_X_NUCLEO_53L1A1(){}     
-    /* warning: VL53L1_X_NUCLEO_53L1A1 class inherits from GenericSensor, RangeSensor and LightSensor, that haven`t a destructor.
-       The warning should request to introduce a virtual destructor to make sure to delete the object */
+   virtual ~VL53L1_X_NUCLEO_53L1A1() {}
+   /* warning: VL53L1_X_NUCLEO_53L1A1 class inherits from GenericSensor, RangeSensor and LightSensor, that haven`t a destructor.
+      The warning should request to introduce a virtual destructor to make sure to delete the object */
 
-	/*** Interface Methods ***/	
-	/*** High level API ***/		
-	/**
-	 * @brief       PowerOn the sensor
-	 * @return      void
-	 */		
-    /* turns on the sensor */		 
-    void VL53L1_On(void)
-    { 
-       expgpio0->write(1);
-       delay(10);    
-    } 
+   /*** Interface Methods ***/
+   /*** High level API ***/
+   /**
+    * @brief       PowerOn the sensor
+    * @return      void
+    */
+   /* turns on the sensor */
+   void VL53L1_On(void)
+   {
+      expgpio0->write(1);
+      delay(10);
+   }
 
-	/**
-	 * @brief       PowerOff the sensor
-	 * @return      void
-	 */		
-    /* turns off the sensor */
-    void VL53L1_Off(void) 
-    { 
-       expgpio0->write(0);
-       delay(10);    
-    }
-	
- protected:		
-    /* GPIO expander */
-    STMPE1600DigiOut *expgpio0;  
+   /**
+    * @brief       PowerOff the sensor
+    * @return      void
+    */
+   /* turns off the sensor */
+   void VL53L1_Off(void)
+   {
+      expgpio0->write(0);
+      delay(10);
+   }
+
+protected:
+   /* GPIO expander */
+   STMPE1600DigiOut *expgpio0;
 };
 
 
