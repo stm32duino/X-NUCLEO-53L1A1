@@ -50,7 +50,15 @@
 #include <assert.h>
 #include <stdlib.h>
 
+#ifdef ARDUINO_SAM_DUE
+#define DEV_I2C Wire1
+#elif defined(ARDUINO_ARCH_STM32)
 #define DEV_I2C Wire
+#elif defined(ARDUINO_ARCH_AVR)
+#define DEV_I2C Wire
+#else
+#define DEV_I2C Wire
+#endif
 #define SerialPort Serial
 
 //For AVR compatibility where D8 and D2 are undefined
@@ -74,13 +82,32 @@ VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
 
 void setup()
 {
-   VL53L1_Error status;
    // Led.
    pinMode(13, OUTPUT);
 
    // Initialize serial for output.
    SerialPort.begin(115200);
    SerialPort.println("Starting...");
+
+//NOTE: workaround in order to unblock the I2C bus on the Arduino Due
+#ifdef ARDUINO_SAM_DUE
+   pinMode(71, OUTPUT);
+   pinMode(70, OUTPUT);
+
+   for (int i = 0; i<10; i++){
+     digitalWrite(70, LOW);
+     delay(3);
+     digitalWrite(71, HIGH);
+     delay(3);
+     digitalWrite(70, HIGH);
+     delay(3);
+     digitalWrite(71, LOW);
+     delay(3);
+   }
+   pinMode(70, INPUT);
+   pinMode(71, INPUT);
+#endif
+//End of workaround
 
    // Initialize I2C bus.
    DEV_I2C.begin();

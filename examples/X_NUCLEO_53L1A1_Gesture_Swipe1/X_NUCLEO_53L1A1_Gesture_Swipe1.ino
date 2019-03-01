@@ -56,7 +56,15 @@
 
 //#define DEBUG_MODE
 
+#ifdef ARDUINO_SAM_DUE
+#define DEV_I2C Wire1
+#elif defined(ARDUINO_ARCH_STM32)
 #define DEV_I2C Wire
+#elif defined(ARDUINO_ARCH_AVR)
+#define DEV_I2C Wire
+#else
+#define DEV_I2C Wire
+#endif
 #define SerialPort Serial
 
 //For AVR compatibility where D8 and D2 are undefined
@@ -118,6 +126,26 @@ void setup()
    // Initialize serial for output.
    SerialPort.begin(115200);
 
+//NOTE: workaround in order to unblock the I2C bus on the Arduino Due
+#ifdef ARDUINO_SAM_DUE
+   pinMode(71, OUTPUT);
+   pinMode(70, OUTPUT);
+
+   for (int i = 0; i<10; i++){
+     digitalWrite(70, LOW);
+     delay(3);
+     digitalWrite(71, HIGH);
+     delay(3);
+     digitalWrite(70, HIGH);
+     delay(3);
+     digitalWrite(71, LOW);
+     delay(3);
+   }
+   pinMode(70, INPUT);
+   pinMode(71, INPUT);
+#endif
+//End of workaround
+
    // Initialize I2C bus.
    DEV_I2C.begin();
 
@@ -162,7 +190,6 @@ void setup()
 void loop()
 {
    int gesture_code;
-   int status;
 
    sensor_vl53l1_top->VL53L1X_StartRanging();
 
