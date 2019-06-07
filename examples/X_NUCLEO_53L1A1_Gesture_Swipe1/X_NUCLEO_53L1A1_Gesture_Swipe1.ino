@@ -101,13 +101,13 @@ void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor)
       SerialPort.println("SetDistanceMode failed");
    }
 
-   //Change timing budget again to 15 ms
-   status = sensor->VL53L1X_SetTimingBudgetInMs(15);
+   //Change timing budget again to 20 ms
+   status = sensor->VL53L1X_SetTimingBudgetInMs(20);
    if( status )
    {
       SerialPort.println("SetMeasurementTimingBudgetMicroSeconds failed");
    }
-   status = sensor->VL53L1X_SetInterMeasurementInMs(15);
+   status = sensor->VL53L1X_SetInterMeasurementInMs(20);
    if( status )
    {
       SerialPort.println("SetInterMeasurementPeriodMilliSeconds failed");
