@@ -229,7 +229,7 @@ void loop()
             }
 
             //if distance < 1.3 m
-            if (RangeStatus != 4)
+            if (RangeStatus == 0)
             {
                // we have a valid range.
                status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance_left);
@@ -275,7 +275,7 @@ void loop()
                SerialPort.println("GetRangeStatus right sensor failed");
             }
             //if distance < 1.3 m
-            if (RangeStatus != 4)
+            if (RangeStatus == 0)
             {
                // we have a valid range.
                status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance_right);
