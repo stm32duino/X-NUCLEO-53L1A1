@@ -31,9 +31,9 @@ There are 5 examples with the  X-NUCLEO-53L1A1 library.
 
 This package requires the following Arduino libraries:
 
-* VL53L1X: https://github.com/stm32duino/VL53L1X
+* STM32duino VL53L1X: https://github.com/stm32duino/VL53L1X
 
-* Proximity_Gesture: https://github.com/stm32duino/Proximity_Gesture
+* STM32duino Proximity_Gesture: https://github.com/stm32duino/Proximity_Gesture
   
 ## Note
 
