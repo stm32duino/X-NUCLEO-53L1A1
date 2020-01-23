@@ -33,7 +33,7 @@ This package requires the following Arduino libraries:
 
 * STM32duino VL53L1X: https://github.com/stm32duino/VL53L1X
 
-* STM32duino Proximity_Gesture: https://github.com/stm32duino/Proximity_Gesture
+* STM32duino Proximity Gesture: https://github.com/stm32duino/Proximity_Gesture
   
 ## Note
 
