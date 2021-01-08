@@ -27,6 +27,10 @@ There are 5 examples with the  X-NUCLEO-53L1A1 library.
   proximity value of the onboard VL53L1X sensor together with the gesture
   library in order to detect a simple tap gesture.
 
+* X_NUCLEO_53L1A1_People_Counting: This example code is to show how to use the
+  proximity value of the onboard VL53L1X sensor in order to count people entering
+  and exiting from a door.
+
 ## Dependencies
 
 This package requires the following Arduino libraries:
