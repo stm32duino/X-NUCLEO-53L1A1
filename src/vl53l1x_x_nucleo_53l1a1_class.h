@@ -54,8 +54,6 @@ public:
    /** Constructor (STMPE1600DigiOut)
     * @param[in] i2c device I2C to be used for communication
     * @param[in] &pin Gpio Expander STMPE1600DigiOut pin to be used as component GPIO_0 CE
-    * @param[in] pin_gpio1 pin Mbed InterruptIn PinName to be used as component GPIO_1 INT
-    * @param[in] device address, 0x29 by default
     */
    VL53L1X_X_NUCLEO_53L1A1(TwoWire *i2c, STMPE1600DigiOut *pin) : VL53L1X(i2c, -1)
    {
