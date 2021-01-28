@@ -74,12 +74,12 @@
 
 
 // Components.
-STMPE1600DigiOut *xshutdown_top;
-STMPE1600DigiOut *xshutdown_left;
-STMPE1600DigiOut *xshutdown_right;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
+STMPE1600DigiOut xshutdown_top(&DEV_I2C, GPIO_15, (0x42 * 2));
+STMPE1600DigiOut xshutdown_left(&DEV_I2C, GPIO_14, (0x43 * 2));
+STMPE1600DigiOut xshutdown_right(&DEV_I2C, GPIO_15, (0x43 * 2));
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_top(&DEV_I2C, &xshutdown_top);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_left(&DEV_I2C, &xshutdown_left);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_right(&DEV_I2C, &xshutdown_right);
 
 // Gesture structure.
 Gesture_DIRSWIPE_1_Data_t gestureDirSwipeData;
@@ -87,7 +87,7 @@ Gesture_DIRSWIPE_1_Data_t gestureDirSwipeData;
 // Range values
 uint16_t distance_left, distance_right;
 
-void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor)
+void SetupSingleShot(VL53L1X_X_NUCLEO_53L1A1 *sensor)
 {
    int status;
 
@@ -146,51 +146,48 @@ void setup()
    // Initialize I2C bus.
    DEV_I2C.begin();
 
-   // Create VL53L1X top component.
-   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-   sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
+   // Configure VL53L1X top component.
+   sensor_vl53l1x_top.begin();
 
    // Switch off VL53L1X top component.
-   sensor_vl53l1_top->VL53L1_Off();
+   sensor_vl53l1x_top.VL53L1X_Off();
 
-   // Create (if present) VL53L1X left component.
-   xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-   sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, 8);
+   // Configure (if present) VL53L1X left component.
+   sensor_vl53l1x_left.begin();
 
    // Switch off (if present) VL53L1X left component.
-   sensor_vl53l1_left->VL53L1_Off();
+   sensor_vl53l1x_left.VL53L1X_Off();
 
-   // Create (if present) VL53L1X right component.
-   xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-   sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, 2);
+   // Configure (if present) VL53L1X right component.
+   sensor_vl53l1x_right.begin();
 
    // Switch off (if present) VL53L1X right component.
-   sensor_vl53l1_right->VL53L1_Off();
+   sensor_vl53l1x_right.VL53L1X_Off();
 
    // Initialize VL53L1X left component.
-   status = sensor_vl53l1_left->InitSensor(0x12);
+   status = sensor_vl53l1x_left.InitSensor(0x12);
    if(status)
    {
-      SerialPort.println("Init sensor_vl53l1_left failed...");
+      SerialPort.println("Init sensor_vl53l1x_left failed...");
    }
 
    // Initialize VL53L1X right component.
-   status = sensor_vl53l1_right->InitSensor(0x14);
+   status = sensor_vl53l1x_right.InitSensor(0x14);
    if(status)
    {
-      SerialPort.println("Init sensor_vl53l1_right failed...");
+      SerialPort.println("Init sensor_vl53l1x_right failed...");
    }
 
    // Initialize VL53L1X gesture library.
    tof_gestures_initDIRSWIPE_1(400, 0, 500, &gestureDirSwipeData);
 
    //Change Distance mode and timings
-   SetupSingleShot(sensor_vl53l1_left);
-   SetupSingleShot(sensor_vl53l1_right);
+   SetupSingleShot(&sensor_vl53l1x_left);
+   SetupSingleShot(&sensor_vl53l1x_right);
 
    //Start measurement
-   sensor_vl53l1_left->VL53L1X_StartRanging();
-   sensor_vl53l1_right->VL53L1X_StartRanging();
+   sensor_vl53l1x_left.VL53L1X_StartRanging();
+   sensor_vl53l1x_right.VL53L1X_StartRanging();
 }
 
 
@@ -212,7 +209,7 @@ void loop()
       {
          NewDataReady = 0;
          //check measurement data ready
-         int status = sensor_vl53l1_left->VL53L1X_CheckForDataReady(&NewDataReady);
+         int status = sensor_vl53l1x_left.VL53L1X_CheckForDataReady(&NewDataReady);
 
          if( status )
          {
@@ -222,7 +219,7 @@ void loop()
          if(NewDataReady)
          {
             //get status
-            status = sensor_vl53l1_left->VL53L1X_GetRangeStatus(&RangeStatus);
+            status = sensor_vl53l1x_left.VL53L1X_GetRangeStatus(&RangeStatus);
             if( status )
             {
                SerialPort.println("GetRangeStatus left sensor failed");
@@ -232,7 +229,7 @@ void loop()
             if (RangeStatus == 0)
             {
                // we have a valid range.
-               status = sensor_vl53l1_left->VL53L1X_GetDistance(&distance_left);
+               status = sensor_vl53l1x_left.VL53L1X_GetDistance(&distance_left);
                if( status )
                {
                   SerialPort.println("GetDistance left sensor failed");
@@ -244,7 +241,7 @@ void loop()
             }
 
             //restart measurement
-            status = sensor_vl53l1_left->VL53L1X_ClearInterrupt();
+            status = sensor_vl53l1x_left.VL53L1X_ClearInterrupt();
             if( status )
             {
                SerialPort.println("Restart left sensor failed");
@@ -259,7 +256,7 @@ void loop()
       {
          NewDataReady = 0;
          //check measurement data ready
-         int status = sensor_vl53l1_right->VL53L1X_CheckForDataReady(&NewDataReady);
+         int status = sensor_vl53l1x_right.VL53L1X_CheckForDataReady(&NewDataReady);
 
          if( status )
          {
@@ -269,7 +266,7 @@ void loop()
          if(NewDataReady)
          {
             //get status
-            status = sensor_vl53l1_right->VL53L1X_GetRangeStatus(&RangeStatus);
+            status = sensor_vl53l1x_right.VL53L1X_GetRangeStatus(&RangeStatus);
             if( status )
             {
                SerialPort.println("GetRangeStatus right sensor failed");
@@ -278,7 +275,7 @@ void loop()
             if (RangeStatus == 0)
             {
                // we have a valid range.
-               status = sensor_vl53l1_right->VL53L1X_GetDistance(&distance_right);
+               status = sensor_vl53l1x_right.VL53L1X_GetDistance(&distance_right);
                if( status )
                {
                   SerialPort.println("GetDistance right sensor failed");
@@ -290,7 +287,7 @@ void loop()
             }
 
             //restart measurement
-            status = sensor_vl53l1_right->VL53L1X_ClearInterrupt();
+            status = sensor_vl53l1x_right.VL53L1X_ClearInterrupt();
             if( status )
             {
                SerialPort.println("Restart right sensor failed");
