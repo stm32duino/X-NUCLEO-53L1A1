@@ -35,8 +35,8 @@
  ******************************************************************************
 */
 
-#ifndef __VL53L1_X_NUCLEO_53L0A1_CLASS_H
-#define __VL53L1_X_NUCLEO_53L0A1_CLASS_H
+#ifndef __VL53L1X_X_NUCLEO_53L1A1_CLASS_H
+#define __VL53L1X_X_NUCLEO_53L1A1_CLASS_H
 
 
 /* Includes ------------------------------------------------------------------*/
@@ -48,7 +48,7 @@
 /* Classes -------------------------------------------------------------------*/
 /** Class representing a VL53L0 sensor component
  */
-class VL53L1_X_NUCLEO_53L1A1 : public VL53L1X
+class VL53L1X_X_NUCLEO_53L1A1 : public VL53L1X
 {
 public:
    /** Constructor (STMPE1600DigiOut)
@@ -57,16 +57,26 @@ public:
     * @param[in] pin_gpio1 pin Mbed InterruptIn PinName to be used as component GPIO_1 INT
     * @param[in] device address, 0x29 by default
     */
-   VL53L1_X_NUCLEO_53L1A1(TwoWire *i2c, STMPE1600DigiOut *pin, int pin_gpio1) : VL53L1X(i2c, -1, pin_gpio1)
+   VL53L1X_X_NUCLEO_53L1A1(TwoWire *i2c, STMPE1600DigiOut *pin) : VL53L1X(i2c, -1)
    {
       expgpio0 = pin;
    }
 
    /** Destructor
     */
-   virtual ~VL53L1_X_NUCLEO_53L1A1() {}
-   /* warning: VL53L1_X_NUCLEO_53L1A1 class inherits from GenericSensor, RangeSensor and LightSensor, that haven`t a destructor.
+   virtual ~VL53L1X_X_NUCLEO_53L1A1() {}
+   /* warning: VL53L1X_X_NUCLEO_53L1A1 class inherits from GenericSensor, RangeSensor and LightSensor, that haven`t a destructor.
       The warning should request to introduce a virtual destructor to make sure to delete the object */
+
+    int begin()
+    {
+       return expgpio0->begin();
+    }
+
+    int end()
+    {
+       return expgpio0->end();
+    }
 
    /*** Interface Methods ***/
    /*** High level API ***/
@@ -75,7 +85,7 @@ public:
     * @return      void
     */
    /* turns on the sensor */
-   void VL53L1_On(void)
+   void VL53L1X_On(void)
    {
       expgpio0->write(1);
       delay(10);
@@ -86,7 +96,7 @@ public:
     * @return      void
     */
    /* turns off the sensor */
-   void VL53L1_Off(void)
+   void VL53L1X_Off(void)
    {
       expgpio0->write(0);
       delay(10);
@@ -98,6 +108,6 @@ protected:
 };
 
 
-#endif /* __VL53L1_X_NUCLEO_53L0A1_CLASS_H */
+#endif /* __VL53L1X_X_NUCLEO_53L1A1_CLASS_H */
 
 

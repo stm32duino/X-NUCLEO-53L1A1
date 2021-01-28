@@ -74,12 +74,12 @@
 #endif
 
 // Components.
-STMPE1600DigiOut *xshutdown_top;
-STMPE1600DigiOut *xshutdown_left;
-STMPE1600DigiOut *xshutdown_right;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
+STMPE1600DigiOut xshutdown_top(&DEV_I2C, GPIO_15, (0x42 * 2));
+STMPE1600DigiOut xshutdown_left(&DEV_I2C, GPIO_14, (0x43 * 2));
+STMPE1600DigiOut xshutdown_right(&DEV_I2C, GPIO_15, (0x43 * 2));
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_top(&DEV_I2C, &xshutdown_top);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_left(&DEV_I2C, &xshutdown_left);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_right(&DEV_I2C, &xshutdown_right);
 
 // Gesture structure.
 Gesture_TAP_1_Data_t gestureTapData;
@@ -87,7 +87,7 @@ Gesture_TAP_1_Data_t gestureTapData;
 // Range value
 uint16_t distance_top;
 
-void SetupSingleShot(VL53L1_X_NUCLEO_53L1A1 *sensor)
+void SetupSingleShot(VL53L1X_X_NUCLEO_53L1A1 *sensor)
 {
    int status;
 
@@ -145,39 +145,36 @@ void setup()
    // Initialize I2C bus.
    DEV_I2C.begin();
 
-   // Create VL53L1 top component.
-   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-   sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
+   // Configure VL53L1X top component.
+   sensor_vl53l1x_top.begin();
 
-   // Switch off VL53L1 top component.
-   sensor_vl53l1_top->VL53L1_Off();
+   // Switch off VL53L1X top component.
+   sensor_vl53l1x_top.VL53L1X_Off();
 
-   // Create (if present) VL53L1 left component.
-   xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-   sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
+   // Configure (if present) VL53L1X left component.
+   sensor_vl53l1x_left.begin();
 
-   // Switch off (if present) VL53L1 left component.
-   sensor_vl53l1_left->VL53L1_Off();
+   // Switch off (if present) VL53L1X left component.
+   sensor_vl53l1x_left.VL53L1X_Off();
 
-   // Create (if present) VL53L1 right component.
-   xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-   sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
+   // Configure (if present) VL53L1X right component.
+   sensor_vl53l1x_right.begin();
 
-   // Switch off (if present) VL53L1 right component.
-   sensor_vl53l1_right->VL53L1_Off();
+   // Switch off (if present) VL53L1X right component.
+   sensor_vl53l1x_right.VL53L1X_Off();
 
-   // Initialize VL53L1 top component.
-   status = sensor_vl53l1_top->InitSensor(0x10);
+   // Initialize VL53L1X top component.
+   status = sensor_vl53l1x_top.InitSensor(0x10);
    if(status)
    {
-      SerialPort.println("Init sensor_vl53l1_top failed...");
+      SerialPort.println("Init sensor_vl53l1x_top failed...");
    }
 
    // Initialize VL53L1X gesture library.
    tof_gestures_initTAP_1(&gestureTapData);
 
    //Change Distance mode and timings
-   SetupSingleShot(sensor_vl53l1_top);
+   SetupSingleShot(&sensor_vl53l1x_top);
 }
 
 
@@ -188,7 +185,7 @@ void loop()
    int gesture_code;
 
    //start measurement
-   sensor_vl53l1_top->VL53L1X_StartRanging();
+   sensor_vl53l1x_top.VL53L1X_StartRanging();
 
    int top_done = 0;
    uint8_t NewDataReady=0;
@@ -201,7 +198,7 @@ void loop()
       {
          NewDataReady = 0;
          //check measurement data ready
-         int status = sensor_vl53l1_top->VL53L1X_CheckForDataReady(&NewDataReady);
+         int status = sensor_vl53l1x_top.VL53L1X_CheckForDataReady(&NewDataReady);
 
          if( status )
          {
@@ -211,7 +208,7 @@ void loop()
          if(NewDataReady)
          {
             //get status
-            status = sensor_vl53l1_top->VL53L1X_GetRangeStatus(&RangeStatus);
+            status = sensor_vl53l1x_top.VL53L1X_GetRangeStatus(&RangeStatus);
             if( status )
             {
                SerialPort.println("GetRangeStatus top sensor failed");
@@ -221,7 +218,7 @@ void loop()
             if (RangeStatus == 0)
             {
                // we have a valid range.
-               status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance_top);
+               status = sensor_vl53l1x_top.VL53L1X_GetDistance(&distance_top);
                distance_top = (distance_top==0) ? 1400 : distance_top;
                if( status )
                {
@@ -234,7 +231,7 @@ void loop()
             }
 
             //restart measurement
-            status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
+            status = sensor_vl53l1x_top.VL53L1X_ClearInterrupt();
             if( status )
             {
                SerialPort.println("Restart top sensor failed");

@@ -116,12 +116,12 @@ int center[2] = {FRONT_ZONE_CENTER, BACK_ZONE_CENTER}; /* these are the spad cen
 int Zone = 0;
 
 // Components.
-STMPE1600DigiOut *xshutdown_top;
-STMPE1600DigiOut *xshutdown_left;
-STMPE1600DigiOut *xshutdown_right;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
+STMPE1600DigiOut xshutdown_top(&DEV_I2C, GPIO_15, (0x42 * 2));
+STMPE1600DigiOut xshutdown_left(&DEV_I2C, GPIO_14, (0x43 * 2));
+STMPE1600DigiOut xshutdown_right(&DEV_I2C, GPIO_15, (0x43 * 2));
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_top(&DEV_I2C, &xshutdown_top);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_left(&DEV_I2C, &xshutdown_left);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_right(&DEV_I2C, &xshutdown_right);
 
 int ProcessPeopleCountingData(int16_t Distance, uint8_t zone, uint8_t RangeStatus);
 
@@ -304,7 +304,7 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone, uint8_t RangeStatu
 void setup()
 {
   // Initialize serial for output.
-  SerialPort.begin(500000);
+  SerialPort.begin(460800);
   SerialPort.println("Starting...");
 
 //NOTE: workaround in order to unblock the I2C bus on the Arduino Due
@@ -330,39 +330,36 @@ void setup()
   // Initialize I2C bus.
   DEV_I2C.begin();
 
-  // Create VL53L1X top component.
-  xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-  sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
+  // Configure VL53L1X top component.
+  sensor_vl53l1x_top.begin();
 
   // Switch off VL53L1X top component.
-  sensor_vl53l1_top->VL53L1_Off();
+  sensor_vl53l1x_top.VL53L1X_Off();
 
-  // Create (if present) VL53L1X left component.
-  xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-  sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
+  // Configure (if present) VL53L1X left component.
+  sensor_vl53l1x_left.begin();
 
-  //Switch off (if present) VL53L1X left component.
-  sensor_vl53l1_left->VL53L1_Off();
+  // Switch off (if present) VL53L1X left component.
+  sensor_vl53l1x_left.VL53L1X_Off();
 
-  // Create (if present) VL53L1X right component.
-  xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-  sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
+  // Configure (if present) VL53L1X right component.
+  sensor_vl53l1x_right.begin();
 
   // Switch off (if present) VL53L1X right component.
-  sensor_vl53l1_right->VL53L1_Off();
+  sensor_vl53l1x_right.VL53L1X_Off();
 
   //Initialize all the sensors
-  sensor_vl53l1_top->InitSensor(0x10);
+  sensor_vl53l1x_top.InitSensor(0x10);
 
-  sensor_vl53l1_top->VL53L1X_SetDistanceMode(DISTANCE_MODE); /* 1=short, 2=long */
-  sensor_vl53l1_top->VL53L1X_SetTimingBudgetInMs(TIMING_BUDGET); /* in ms possible values [15, 20, 50, 100, 200, 500] */
-  sensor_vl53l1_top->VL53L1X_SetInterMeasurementInMs(TIMING_BUDGET);
-  sensor_vl53l1_top->VL53L1X_SetROI(ROWS_OF_SPADS, 16); /* minimum ROI 4,4 */
+  sensor_vl53l1x_top.VL53L1X_SetDistanceMode(DISTANCE_MODE); /* 1=short, 2=long */
+  sensor_vl53l1x_top.VL53L1X_SetTimingBudgetInMs(TIMING_BUDGET); /* in ms possible values [15, 20, 50, 100, 200, 500] */
+  sensor_vl53l1x_top.VL53L1X_SetInterMeasurementInMs(TIMING_BUDGET);
+  sensor_vl53l1x_top.VL53L1X_SetROI(ROWS_OF_SPADS, 16); /* minimum ROI 4,4 */
 
   SerialPort.print("Start counting people with profile : ");
   SerialPort.print(PROFILE_STRING);
   SerialPort.println("...");
-  sensor_vl53l1_top->VL53L1X_StartRanging();   /* This function has to be called to enable the ranging */
+  sensor_vl53l1x_top.VL53L1X_StartRanging();   /* This function has to be called to enable the ranging */
 }
 
 void loop()
@@ -375,21 +372,21 @@ void loop()
   //Poll for measurament completion top sensor
   while (dataReady == 0)
   {
-    status = sensor_vl53l1_top->VL53L1X_CheckForDataReady(&dataReady);
+    status = sensor_vl53l1x_top.VL53L1X_CheckForDataReady(&dataReady);
     delay(1);
   }
 
-  status += sensor_vl53l1_top->VL53L1X_GetRangeStatus(&RangeStatus);
-  status += sensor_vl53l1_top->VL53L1X_GetDistance(&Distance);
-  status += sensor_vl53l1_top->VL53L1X_GetSignalPerSpad(&Signal);
-  status += sensor_vl53l1_top->VL53L1X_ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
+  status += sensor_vl53l1x_top.VL53L1X_GetRangeStatus(&RangeStatus);
+  status += sensor_vl53l1x_top.VL53L1X_GetDistance(&Distance);
+  status += sensor_vl53l1x_top.VL53L1X_GetSignalPerSpad(&Signal);
+  status += sensor_vl53l1x_top.VL53L1X_ClearInterrupt(); /* clear interrupt has to be called to enable next interrupt*/
 
   if (status != 0)
   {
     SerialPort.println("Error in operating the device");
   }
 
-  status = sensor_vl53l1_top->VL53L1X_SetROICenter(center[Zone]);
+  status = sensor_vl53l1x_top.VL53L1X_SetROICenter(center[Zone]);
   if (status != 0)
   {
     SerialPort.println("Error in chaning the center of the ROI");
@@ -400,14 +397,14 @@ void loop()
 
   // check the status of the ranging. In case of error, lets assume the distance is the max of the use case
   // Value RangeStatus string Comment
-  // 0 VL53L1_RANGESTATUS_RANGE_VALID Ranging measurement is valid
-  // 1 VL53L1_RANGESTATUS_SIGMA_FAIL Raised if sigma estimator check is above the internal defined threshold
-  // 2 VL53L1_RANGESTATUS_SIGNAL_FAIL Raised if signal value is below the internal defined threshold
-  // 4 VL53L1_RANGESTATUS_OUTOFBOUNDS_ FAIL Raised when phase is out of bounds
-  // 5 VL53L1_RANGESTATUS_HARDWARE_FAIL Raised in case of HW or VCSEL failure
-  // 7 VL53L1_RANGESTATUS_WRAP_TARGET_ FAIL Wrapped target, not matching phases
-  // 8 VL53L1_RANGESTATUS_PROCESSING_ FAIL Internal algorithm underflow or overflow
-  // 14 VL53L1_RANGESTATUS_RANGE_INVALID The reported range is invalid
+  // 0 VL53L1X_RANGESTATUS_RANGE_VALID Ranging measurement is valid
+  // 1 VL53L1X_RANGESTATUS_SIGMA_FAIL Raised if sigma estimator check is above the internal defined threshold
+  // 2 VL53L1X_RANGESTATUS_SIGNAL_FAIL Raised if signal value is below the internal defined threshold
+  // 4 VL53L1X_RANGESTATUS_OUTOFBOUNDS_ FAIL Raised when phase is out of bounds
+  // 5 VL53L1X_RANGESTATUS_HARDWARE_FAIL Raised in case of HW or VCSEL failure
+  // 7 VL53L1X_RANGESTATUS_WRAP_TARGET_ FAIL Wrapped target, not matching phases
+  // 8 VL53L1X_RANGESTATUS_PROCESSING_ FAIL Internal algorithm underflow or overflow
+  // 14 VL53L1X_RANGESTATUS_RANGE_INVALID The reported range is invalid
   if ((RangeStatus == 0) || (RangeStatus == 4) || (RangeStatus == 7))
   {
     if (Distance <= MIN_DISTANCE) // wraparound case see the explanation at the constants definition place

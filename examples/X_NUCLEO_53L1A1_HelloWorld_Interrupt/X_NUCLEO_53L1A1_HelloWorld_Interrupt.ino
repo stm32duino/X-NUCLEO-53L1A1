@@ -78,12 +78,12 @@
 #define interruptPin A2
 
 // Components.
-STMPE1600DigiOut *xshutdown_top;
-STMPE1600DigiOut *xshutdown_left;
-STMPE1600DigiOut *xshutdown_right;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_top;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_left;
-VL53L1_X_NUCLEO_53L1A1 *sensor_vl53l1_right;
+STMPE1600DigiOut xshutdown_top(&DEV_I2C, GPIO_15, (0x42 * 2));
+STMPE1600DigiOut xshutdown_left(&DEV_I2C, GPIO_14, (0x43 * 2));
+STMPE1600DigiOut xshutdown_right(&DEV_I2C, GPIO_15, (0x43 * 2));
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_top(&DEV_I2C, &xshutdown_top);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_left(&DEV_I2C, &xshutdown_left);
+VL53L1X_X_NUCLEO_53L1A1 sensor_vl53l1x_right(&DEV_I2C, &xshutdown_right);
 
 volatile int interruptCount=0;
 
@@ -94,7 +94,7 @@ void measure()
 
 void setup()
 {
-   VL53L1_Error status;
+   VL53L1X_Error status;
    // Led.
    pinMode(13, OUTPUT);
    pinMode(interruptPin, INPUT_PULLUP);
@@ -127,48 +127,45 @@ void setup()
    // Initialize I2C bus.
    DEV_I2C.begin();
 
-   // Create VL53L1X top component.
-   xshutdown_top = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x42 * 2));
-   sensor_vl53l1_top = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_top, A2);
+   // Configure VL53L1X top component.
+   sensor_vl53l1x_top.begin();
 
    // Switch off VL53L1X top component.
-   sensor_vl53l1_top->VL53L1_Off();
+   sensor_vl53l1x_top.VL53L1X_Off();
 
-   // Create (if present) VL53L1X left component.
-   xshutdown_left = new STMPE1600DigiOut(&DEV_I2C, GPIO_14, (0x43 * 2));
-   sensor_vl53l1_left = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_left, D8);
+   // Configure (if present) VL53L1X left component.
+   sensor_vl53l1x_left.begin();
 
-   //Switch off (if present) VL53L1X left component.
-   sensor_vl53l1_left->VL53L1_Off();
+   // Switch off (if present) VL53L1X left component.
+   sensor_vl53l1x_left.VL53L1X_Off();
 
-   // Create (if present) VL53L1X right component.
-   xshutdown_right = new STMPE1600DigiOut(&DEV_I2C, GPIO_15, (0x43 * 2));
-   sensor_vl53l1_right = new VL53L1_X_NUCLEO_53L1A1(&DEV_I2C, xshutdown_right, D2);
+   // Configure (if present) VL53L1X right component.
+   sensor_vl53l1x_right.begin();
 
    // Switch off (if present) VL53L1X right component.
-   sensor_vl53l1_right->VL53L1_Off();
+   sensor_vl53l1x_right.VL53L1X_Off();
 
    // Initialize VL53L1X top component.
-   status = sensor_vl53l1_top->InitSensor(0x10);
+   status = sensor_vl53l1x_top.InitSensor(0x10);
    if(status)
    {
-      SerialPort.println("Init sensor_vl53l1x_top failed...");
+      SerialPort.println("Init sensor_vl53l1xx_top failed...");
    }
 
    //Change timing budget to the minimum consented by the long range mode (20ms)
-   status = sensor_vl53l1_top->VL53L1X_SetTimingBudgetInMs(20);
+   status = sensor_vl53l1x_top.VL53L1X_SetTimingBudgetInMs(20);
    if( status )
    {
       SerialPort.println("SetMeasurementTimingBudgetMicroSeconds top sensor failed");
    }
-   status = sensor_vl53l1_top->VL53L1X_SetInterMeasurementInMs(20);
+   status = sensor_vl53l1x_top.VL53L1X_SetInterMeasurementInMs(20);
    if( status )
    {
       SerialPort.println("SetInterMeasurementPeriodMilliSeconds top sensor failed");
    }
 
    //Start measurement
-   sensor_vl53l1_top->VL53L1X_StartRanging();
+   sensor_vl53l1x_top.VL53L1X_StartRanging();
 }
 
 void loop()
@@ -183,14 +180,14 @@ void loop()
       digitalWrite(13, HIGH);
 
       //read distance
-      status = sensor_vl53l1_top->VL53L1X_GetDistance(&distance);
+      status = sensor_vl53l1x_top.VL53L1X_GetDistance(&distance);
       if( status )
       {
          SerialPort.println("GetDistance top sensor failed");
       }
 
       //restart sensor
-      status = sensor_vl53l1_top->VL53L1X_ClearInterrupt();
+      status = sensor_vl53l1x_top.VL53L1X_ClearInterrupt();
       if( status )
       {
          SerialPort.println("Restart top sensor failed");

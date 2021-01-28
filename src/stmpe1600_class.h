@@ -49,7 +49,7 @@
 #define SYS_CTRL        (uint8_t)0x03
 #define IEGPIOR_0_7     (uint8_t)0x08
 #define IEGPIOR_8_15    (uint8_t)0x09
-#define ISGPIOR_0_7	    (uint8_t)0x0A
+#define ISGPIOR_0_7     (uint8_t)0x0A
 #define ISGPIOR_8_15    (uint8_t)0x0B
 #define GPMR_0_7        (uint8_t)0x10
 #define GPMR_8_15       (uint8_t)0x11
@@ -58,121 +58,136 @@
 #define GPDR_0_7        (uint8_t)0x14
 #define GPDR_8_15       (uint8_t)0x15
 #define GPIR_0_7        (uint8_t)0x16
-#define GPIR_8_15	    (uint8_t)0x17
+#define GPIR_8_15     (uint8_t)0x17
 
 
-typedef enum
-{
-   // GPIO Expander pin names
-   GPIO_0=0,
-   GPIO_1,
-   GPIO_2,
-   GPIO_3,
-   GPIO_4,
-   GPIO_5,
-   GPIO_6,
-   GPIO_7,
-   GPIO_8,
-   GPIO_9,
-   GPIO_10,
-   GPIO_11,
-   GPIO_12,
-   GPIO_13,
-   GPIO_14,
-   GPIO_15,
-   NOT_CON
+typedef enum {
+  // GPIO Expander pin names
+  GPIO_0 = 0,
+  GPIO_1,
+  GPIO_2,
+  GPIO_3,
+  GPIO_4,
+  GPIO_5,
+  GPIO_6,
+  GPIO_7,
+  GPIO_8,
+  GPIO_9,
+  GPIO_10,
+  GPIO_11,
+  GPIO_12,
+  GPIO_13,
+  GPIO_14,
+  GPIO_15,
+  NOT_CON
 } ExpGpioPinName;
 
-typedef enum
-{
-   EXP_GPIO_INPUT = 0,
-   EXP_GPIO_OUTPUT,
-   EXP_GPIO_NOT_CONNECTED
+typedef enum {
+  EXP_GPIO_INPUT = 0,
+  EXP_GPIO_OUTPUT,
+  EXP_GPIO_NOT_CONNECTED
 } ExpGpioPinDirection;
 
 /* Classes -------------------------------------------------------------------*/
 /** Class representing a single stmpe1600 GPIO expander output pin
  */
-class STMPE1600DigiOut
-{
+class STMPE1600DigiOut {
 
-public:
-   /** Constructor
-    * @param[in] &i2c device I2C to be used for communication
-    * @param[in] outpinname the desired out pin name to be created
-    * @param[in] DevAddr the stmpe1600 I2C device addres (deft STMPE1600_DEF_DEVICE_ADDRESS)
-    * @param[in] lvl the default ot pin level
-    */
-   STMPE1600DigiOut (TwoWire *i2c, ExpGpioPinName outpinname, uint8_t DevAddr=STMPE1600_DEF_DEVICE_ADDRESS, bool lvl=STMPE1600_DEF_DIGIOUT_LVL): dev_i2c(i2c), expdevaddr(DevAddr), exppinname(outpinname)
-   {
-       bit16Tobit8_t data;				
-       if (exppinname == NOT_CON) return;
-       /* set the exppinname as output */
-       STMPE1600DigiOut_I2CRead(&data.u8bit[0], expdevaddr, GPDR_0_7, 1);
-       STMPE1600DigiOut_I2CRead(&data.u8bit[1], expdevaddr, GPDR_8_15, 1);			
-       data.u16bit = data.u16bit | (1<<(uint16_t)exppinname);  // set gpio as out
-       STMPE1600DigiOut_I2CWrite(&data.u8bit[0], expdevaddr, GPDR_0_7, 1);
-       STMPE1600DigiOut_I2CWrite(&data.u8bit[1], expdevaddr, GPDR_8_15, 1);			
-       write(lvl);
-   }
+  public:
+    /** Constructor
+     * @param[in] &i2c device I2C to be used for communication
+     * @param[in] outpinname the desired out pin name to be created
+     * @param[in] DevAddr the stmpe1600 I2C device address (deft STMPE1600_DEF_DEVICE_ADDRESS)
+     * @param[in] lvl the default output pin level
+     */
+    STMPE1600DigiOut(TwoWire *i2c, ExpGpioPinName outpinname, uint8_t DevAddr = STMPE1600_DEF_DEVICE_ADDRESS, bool lvl = STMPE1600_DEF_DIGIOUT_LVL): dev_i2c(i2c), expdevaddr(DevAddr), exppinname(outpinname)
+    {
+      if (exppinname == NOT_CON) {
+        return;
+      }
+      pinlvl = lvl;
+    }
 
-   /**
-    * @brief       Write on the out pin
-    * @param[in]   lvl level to write
-    * @return      0 on Success
-    */
-   void write (int lvl)
-   {
-       bit16Tobit8_t data;			
-       if (exppinname == NOT_CON) return;			
-       /* set the exppinname state to lvl */
-       STMPE1600DigiOut_I2CRead(data.u8bit, expdevaddr, GPSR_0_7, 2);
-       data.u16bit = data.u16bit & (uint16_t)(~(1<<(uint16_t)exppinname));  // set pin mask 			
-       if (lvl) data.u16bit = data.u16bit | (uint16_t)(1<<(uint16_t)exppinname);
-       STMPE1600DigiOut_I2CWrite(data.u8bit, expdevaddr, GPSR_0_7, 2);
-   }
+    int begin()
+    {
+      bit16Tobit8_t data;
+      /* set the exppinname as output */
+      STMPE1600DigiOut_I2CRead(&data.u8bit[0], expdevaddr, GPDR_0_7, 1);
+      STMPE1600DigiOut_I2CRead(&data.u8bit[1], expdevaddr, GPDR_8_15, 1);
+      data.u16bit = data.u16bit | (1 << (uint16_t)exppinname); // set gpio as out
+      STMPE1600DigiOut_I2CWrite(&data.u8bit[0], expdevaddr, GPDR_0_7, 1);
+      STMPE1600DigiOut_I2CWrite(&data.u8bit[1], expdevaddr, GPDR_8_15, 1);
+      write(pinlvl);
+      return 0;
+    }
 
-private:
-   TwoWire *dev_i2c;
-   uint8_t expdevaddr;
-   ExpGpioPinName exppinname;
+    int end()
+    {
+      /* Do nothing */
+      return 0;
+    }
 
-   int STMPE1600DigiOut_I2CWrite(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToWrite)
-   {
+    /**
+     * @brief       Write on the out pin
+     * @param[in]   lvl level to write
+     * @return      0 on Success
+     */
+    void write(int lvl)
+    {
+      bit16Tobit8_t data;
+      if (exppinname == NOT_CON) {
+        return;
+      }
+      /* set the exppinname state to lvl */
+      STMPE1600DigiOut_I2CRead(data.u8bit, expdevaddr, GPSR_0_7, 2);
+      data.u16bit = data.u16bit & (uint16_t)(~(1 << (uint16_t)exppinname)); // set pin mask
+      if (lvl) {
+        data.u16bit = data.u16bit | (uint16_t)(1 << (uint16_t)exppinname);
+      }
+      STMPE1600DigiOut_I2CWrite(data.u8bit, expdevaddr, GPSR_0_7, 2);
+    }
+
+  private:
+    TwoWire *dev_i2c;
+    uint8_t expdevaddr;
+    ExpGpioPinName exppinname;
+    bool pinlvl;
+
+    int STMPE1600DigiOut_I2CWrite(uint8_t *pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToWrite)
+    {
       dev_i2c->beginTransmission(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)));
 
       dev_i2c->write(RegisterAddr);
-      for (uint16_t i = 0 ; i < NumByteToWrite ; i++)
-         dev_i2c->write(pBuffer[i]);
+      for (uint16_t i = 0 ; i < NumByteToWrite ; i++) {
+        dev_i2c->write(pBuffer[i]);
+      }
 
       dev_i2c->endTransmission(true);
 
       return 0;
-   }
+    }
 
-   int STMPE1600DigiOut_I2CRead(uint8_t* pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead)
-   {
+    int STMPE1600DigiOut_I2CRead(uint8_t *pBuffer, uint8_t DeviceAddr, uint8_t RegisterAddr, uint16_t NumByteToRead)
+    {
       dev_i2c->beginTransmission(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)));
       dev_i2c->write(RegisterAddr);
       dev_i2c->endTransmission(false);
 
       dev_i2c->requestFrom(((uint8_t)(((DeviceAddr) >> 1) & 0x7F)), (byte) NumByteToRead);
 
-      int i=0;
-      while (dev_i2c->available())
-      {
-         pBuffer[i] = dev_i2c->read();
-         i++;
+      int i = 0;
+      while (dev_i2c->available()) {
+        pBuffer[i] = dev_i2c->read();
+        i++;
       }
 
       return 0;
-   }
-   
-   typedef union
-   {
+    }
+
+    typedef union {
       uint16_t u16bit;
       uint8_t u8bit[2];
-   } bit16Tobit8_t;
+    } bit16Tobit8_t;
 
 };
 
