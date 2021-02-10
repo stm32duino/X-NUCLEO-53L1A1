@@ -108,7 +108,7 @@
 #define BACK_ZONE_CENTER                             239
 #elif ROWS_OF_SPADS == 8
 #define FRONT_ZONE_CENTER                            175 // was 167, see UM2555 on st.com, centre = 175 has better return signal rate for the ROI #1
-#define BACK_ZONE_CENTER                             231 
+#define BACK_ZONE_CENTER                             231
 #endif
 
 int PplCounter = 0;
@@ -198,16 +198,16 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone, uint8_t RangeStatu
     }
   } else // right zone
   {
-    
+
     if (CurrentZoneStatus != RightPreviousStatus)
     {
-      // event in left zone has occured
+      // event in right zone has occured
       AnEventHasOccured = 1;
       if (CurrentZoneStatus == SOMEONE)
       {
         AllZonesCurrentStatus += 2;
       }
-      // need to left right zone as well ...
+      // need to check left zone as well ...
       if (LeftPreviousStatus == SOMEONE)
       {
         // event in left zone has occured
@@ -217,7 +217,7 @@ int ProcessPeopleCountingData(int16_t Distance, uint8_t zone, uint8_t RangeStatu
       RightPreviousStatus = CurrentZoneStatus;
     }
   }
-  
+
 #ifdef TRACE_PPC
   // print debug data only when someone is within the field of view
   trace_count++;
